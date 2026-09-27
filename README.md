@@ -40,6 +40,17 @@ Hooks:
 The row pool is fixed by the UI template, so a large party is summarised by the game's overflow
 divider rather than growing the panel.
 
+## Install
+
+1. Install BepInEx for the game if you have not already - see [Requirements](#requirements) for
+   which build you need.
+2. Download `RestPartyPanel-1.0.0.zip` from the
+   [releases page](https://github.com/ap0ught/ftk2-rest-party-panel/releases).
+3. Unzip it into the game folder: `Steam/steamapps/common/For The King II/`
+
+It drops itself into `BepInEx/plugins/RestPartyPanel/`. Nothing else is touched. To remove, delete
+that folder.
+
 ## Build and install
 
 ```bash
@@ -51,6 +62,19 @@ Requires the `dotnet` SDK. The game directory defaults to
 
 The build targets `net472` against the game's own `FTK2.dll`, BepInEx, Harmony and the UnityEngine
 UI Toolkit modules, and drops `RestPartyPanel.dll` into `BepInEx/plugins/`.
+
+## Requirements
+
+| | |
+| --- | --- |
+| BepInEx | **5.x or 6.x** - needs the plugin API (`BaseUnityPlugin`) plus `Config.Bind`, so 5.0 or newer |
+| Harmony | 2.x (2.0+; `Harmony.CreateAndPatchAll(Assembly)`), which ships with BepInEx 5 and 6 |
+| Game backend | **Mono**, not IL2CPP. For The King II ships `MonoBleedingEdge`, so the standard Mono BepInEx build is correct. An IL2CPP BepInEx will not load this. |
+| .NET | `net472`, the same profile BepInEx 5/6 plugins target on Windows |
+
+Verified loading on BepInEx 5.4.23.5 / Harmony 2.9.0.0 / Unity 2022.3.41.1022081 / Mono, on
+Windows. BepInEx 6 keeps the same plugin API, so it should work unchanged there too, but that is
+not something I have tested.
 
 ## Configuration
 
