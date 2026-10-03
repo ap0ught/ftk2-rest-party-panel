@@ -1,26 +1,39 @@
 #!/usr/bin/env bash
-# Builds RestPartyPanel and packages it as a drop-in BepInEx zip.
+# Builds every plugin and packages each as its own drop-in BepInEx zip.
 # Unzip into the For The King II folder: it lands in BepInEx/plugins/ on its own.
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-VERSION="$(grep -oP '(?<=<Version>)[^<]+' "$PROJECT_DIR/RestPartyPanel/RestPartyPanel.csproj" | head -1)"
-STAGE="$(mktemp -d)"
-trap 'rm -rf "$STAGE"' EXIT
+OUT_DIR="$PROJECT_DIR/outputs"
+
+PLUGINS=(
+	"RestPartyPanel"
+	"FlockMemory"
+)
 
 "$PROJECT_DIR/build.sh"
 
-mkdir -p "$STAGE/BepInEx/plugins/RestPartyPanel"
-cp "$PROJECT_DIR/RestPartyPanel/bin/Release/RestPartyPanel.dll" \
-	"$STAGE/BepInEx/plugins/RestPartyPanel/RestPartyPanel.dll"
-
-OUT_DIR="$PROJECT_DIR/outputs"
 mkdir -p "$OUT_DIR"
-ZIP="$OUT_DIR/RestPartyPanel-$VERSION.zip"
-rm -f "$ZIP"
-(cd "$STAGE" && zip -qr9 "$ZIP" BepInEx)
+for plugin in "${PLUGINS[@]}"; do
+	version="$(grep -oP '(?<=<Version>)[^<]+' "$PROJECT_DIR/$plugin/$plugin.csproj" | head -1)"
+	stage="$(mktemp -d)"
+	trap 'rm -rf "$stage"' EXIT
+
+	mkdir -p "$stage/BepInEx/plugins/$plugin"
+	cp "$PROJECT_DIR/$plugin/bin/Release/$plugin.dll" \
+		"$stage/BepInEx/plugins/$plugin/$plugin.dll"
+
+	zip_file="$OUT_DIR/$plugin-$version.zip"
+	rm -f "$zip_file"
+	(cd "$stage" && zip -qr9 "$zip_file" BepInEx)
+
+	rm -rf "$stage"
+	trap - EXIT
+
+	echo
+	echo "packaged: $zip_file"
+	unzip -l "$zip_file" | sed 's/^/    /'
+done
 
 echo
-unzip -l "$ZIP"
-echo
-echo "packaged: $ZIP"
+echo "Every plugin must be installed on every peer in an online co-op session."

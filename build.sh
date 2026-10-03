@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
-# Builds RestPartyPanel.dll and copies it into the game's BepInEx/plugins folder.
+# Builds the plugins in this repo and copies them into the game's BepInEx/plugins
+# folder. Each plugin is an independent BepInEx assembly; both are built together
+# so a single run leaves the game folder consistent.
 set -euo pipefail
 
 GAME_DIR="${FTK2_DIR:-$HOME/.local/share/Steam/steamapps/common/For The King II}"
@@ -12,11 +14,23 @@ fi
 
 export FTK2ManagedDir="$GAME_DIR/For The King II_Data/Managed"
 
-dotnet build "$PROJECT_DIR/RestPartyPanel/RestPartyPanel.csproj" \
-	-c Release -v minimal --nologo
+# Plugin directory name -> csproj directory name.
+PLUGINS=(
+	"RestPartyPanel"
+	"FlockMemory"
+)
 
-install -Dm644 "$PROJECT_DIR/RestPartyPanel/bin/Release/RestPartyPanel.dll" \
-	"$GAME_DIR/BepInEx/plugins/RestPartyPanel.dll"
+for plugin in "${PLUGINS[@]}"; do
+	echo "==> building $plugin"
+	dotnet build "$PROJECT_DIR/$plugin/$plugin.csproj" \
+		-c Release -v minimal --nologo
+	install -Dm644 "$PROJECT_DIR/$plugin/bin/Release/$plugin.dll" \
+		"$GAME_DIR/BepInEx/plugins/$plugin.dll"
+	echo "    installed: $GAME_DIR/BepInEx/plugins/$plugin.dll"
+done
 
 echo
-echo "installed: $GAME_DIR/BepInEx/plugins/RestPartyPanel.dll"
+echo "all plugins installed. In co-op, share every one of them with your partner:"
+for plugin in "${PLUGINS[@]}"; do
+	echo "    $GAME_DIR/BepInEx/plugins/$plugin.dll"
+done
